@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>發發複製小工具 🐱</title>
+    <style>
+        :root {
+            --bg-main: #07070c;
+            --bg-card: #121222;
+            --primary: #9d4edd;
+            --primary-light: #c77dff;
+            --secondary: #3a0ca3;
+            --cyan: #4cc9f0;
+            --text: #e0aaff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Microsoft JhengHei, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--bg-card);
+            border: 2px solid var(--secondary);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(157, 78, 221, 0.15);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .cat-logo {
+            font-size: 3rem;
+            text-shadow: 0 0 15px var(--primary);
+            animation: pulse 2s infinite alternate;
+            display: inline-block;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--primary-light);
+            margin-top: 10px;
+            text-shadow: 0 0 10px rgba(199, 125, 255, 0.5);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 2px var(--cyan)); }
+            100% { transform: scale(1.05); filter: drop-shadow(0 0 12px var(--primary)); }
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: #0d0d1a;
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            color: #fff;
+            padding: 12px;
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 15px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        textarea:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 10px rgba(76, 201, 240, 0.4);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn-update {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: #fff;
+            border: 1px solid var(--primary-light);
+        }
+
+        .btn-update:hover {
+            box-shadow: 0 0 15px var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .btn-pip {
+            background: linear-gradient(135deg, #240046, var(--secondary));
+            color: var(--cyan);
+            border: 1px solid var(--cyan);
+        }
+
+        .btn-pip:hover {
+            box-shadow: 0 0 15px var(--cyan);
+            transform: translateY(-2px);
+        }
+
+        .btn-copied {
+            background: linear-gradient(135deg, #4cc9f0, #b8f2ff) !important;
+            color: #000 !important;
+            box-shadow: 0 0 18px rgba(76, 201, 240, 0.85) !important;
+            transform: scale(0.97);
+        }
+
+        .list-title {
+            font-size: 1.1rem;
+            color: var(--cyan);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .string-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        ::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        .string-item {
+            background: #16162a;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            word-break: break-all;
+        }
+
+        .string-item:hover {
+            background: #1f1f3a;
+            border-color: var(--cyan);
+            transform: translateX(3px);
+        }
+
+        .string-item::before {
+            content: "🐾";
+            margin-right: 8px;
+            font-size: 0.9rem;
+        }
+
+        .string-item.copied {
+            background: #4cc9f0 !important;
+            color: #000 !important;
+            border-color: #fff !important;
+            transform: scale(0.98);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--cyan);
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 0 15px var(--cyan);
+            z-index: 9999;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="cat-logo">🐧🐱🐧</div>
+            <h1>發發複製助手</h1>
+        </div>
+
+        <textarea id="inputArea" placeholder="請輸入欲複製的字串，一排一個字串唷...
+例如：
+發發超級可愛
+喵喵( 🐾 ω 🐾 )"></textarea>
+
+        <div class="btn-group">
+            <button id="updateBtn" class="btn-update" onclick="saveAndRender(this)">🐾 更新清單</button>
+            <button class="btn-pip" onclick="openMiniPip()">📺 開啟最上層小視窗</button>
+        </div>
+
+        <div class="list-title">📋 目前字串 (點擊直接複製)</div>
+        <div class="string-list" id="stringList"></div>
+    </div>
+
+    <div class="toast" id="toast">已複製到剪貼簿！ 🐾</div>
+
+    <template id="pipStyles">
+        <style>
+            body {
+                background: #05050a !important;
+                margin: 0;
+                padding: 4px;
+                font-family: sans-serif;
+                overflow-x: hidden;
+            }
+            .pip-container {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .pip-item {
+                background: #101020;
+                color: #c77dff;
+                border: 1px solid #3a0ca3;
+                padding: 6px 8px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                transition: all 0.15s;
+                display: flex;
+                align-items: center;
+            }
+            .pip-item:hover {
+                background: #1a1a35;
+                border-color: #4cc9f0;
+                color: #fff;
+            }
+            .pip-item::before {
+                content: "🐱";
+                margin-right: 4px;
+                font-size: 11px;
+            }
+            .pip-item.copied {
+                background: #4cc9f0 !important;
+                color: #000 !important;
+                border-color: #fff !important;
+                transform: scale(0.95);
+            }
+        </style>
+    </template>
+
+    <script>
+        let dataList = ["🐾 發發最可愛了", "(🐾 =´⌔` )/ 喵~", "鵝鵝鵝鵝鵝"];
+        let pipWindow = null;
+
+        window.onload = function() {
+            const localData = localStorage.getItem('cat_strings');
+            if (localData) {
+                dataList = JSON.parse(localData);
+            }
+            document.getElementById('inputArea').value = dataList.join('\n');
+            renderList();
+        };
+
+        function saveAndRender(btn = null) {
+            const text = document.getElementById('inputArea').value;
+            dataList = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+            localStorage.setItem('cat_strings', JSON.stringify(dataList));
+            renderList();
+
+            if (pipWindow) {
+                renderPipContent();
+            }
+
+            if (btn) {
+                showButtonCopied(btn);
+            }
+        }
+
+        function renderList() {
+            const container = document.getElementById('stringList');
+            container.innerHTML = '';
+
+            dataList.forEach(str => {
+                const item = document.createElement('div');
+                item.className = 'string-item';
+                item.innerText = str;
+                item.onclick = () => copyText(str, item, document.getElementById('updateBtn'));
+                container.appendChild(item);
+            });
+        }
+
+        function showButtonCopied(btn) {
+            const originalText = btn.innerHTML;
+            btn.classList.add('btn-copied');
+            btn.innerHTML = '✅ 已複製';
+
+            setTimeout(() => {
+                btn.classList.remove('btn-copied');
+                btn.innerHTML = originalText;
+            }, 800);
+        }
+
+        function copyText(text, elementToAnimate = null, buttonToAnimate = null) {
+            navigator.clipboard.writeText(text).then(() => {
+                if (elementToAnimate) {
+                    elementToAnimate.classList.add('copied');
+                    setTimeout(() => elementToAnimate.classList.remove('copied'), 300);
+                }
+
+                if (buttonToAnimate) {
+                    showButtonCopied(buttonToAnimate);
+                } else {
+                    const toast = document.getElementById('toast');
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 1200);
+                }
+            }).catch(err => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                if (elementToAnimate) {
+                    elementToAnimate.classList.add('copied');
+                    setTimeout(() => elementToAnimate.classList.remove('copied'), 300);
+                }
+
+                if (buttonToAnimate) {
+                    showButtonCopied(buttonToAnimate);
+                }
+            });
+        }
+
+        async function openMiniPip() {
+            if (!('documentPictureInPicture' in window)) {
+                alert("糟糕！您的瀏覽器不支援 Document PiP 功能。請使用最新版的 Chrome 或 Edge 瀏覽器唷！");
+                return;
+            }
+
+            if (pipWindow) {
+                pipWindow.close();
+            }
+
+            const calculatedHeight = Math.min(60 + (dataList.length * 34), 400);
+            pipWindow = await window.documentPictureInPicture.requestWindow({
+                width: 160,
+                height: calculatedHeight
+            });
+
+            const styleTemplate = document.getElementById('pipStyles');
+            pipWindow.document.head.appendChild(styleTemplate.content.cloneNode(true));
+
+            const pipContainer = pipWindow.document.createElement('div');
+            pipContainer.className = 'pip-container';
+            pipContainer.id = 'pipContainer';
+            pipWindow.document.body.appendChild(pipContainer);
+
+            renderPipContent();
+
+            pipWindow.addEventListener('pagehide', () => {
+                pipWindow = null;
+            });
+        }
+
+        function renderPipContent() {
+            if (!pipWindow) return;
+
+            const pipContainer = pipWindow.document.getElementById('pipContainer');
+            pipContainer.innerHTML = '';
+
+            if (dataList.length === 0) {
+                pipContainer.innerHTML = '<div style="color:#666;font-size:11px;text-align:center;padding:10px;">無字串🐾</div>';
+                return;
+            }
+
+            dataList.forEach(str => {
+                const item = pipWindow.document.createElement('div');
+                item.className = 'pip-item';
+                item.innerText = str;
+                item.title = str;
+                item.onclick = () => {
+                    const updateBtn = document.getElementById('updateBtn');
+                    copyText(str, item, updateBtn);
+                };
+                pipContainer.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
