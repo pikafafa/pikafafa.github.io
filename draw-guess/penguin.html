@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐧 企鵝收集箱 🐾</title>
+    <style>
+        /* 全域樣式：深色療癒貓咪風 */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent-color0: #ff94c2; /* 貓墊粉紅色 */
+            --accent-color: #c77dff;
+            --text-color: #e0e0e0;
+            --border-color: #2d2d2d;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 5px;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 搜尋欄貨櫃（加上可愛貓耳） */
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 30px 0;
+        }
+
+        /* 左貓耳 */
+        .search-container::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 15px solid var(--card-bg);
+        }
+
+        /* 右貓耳 */
+        .search-container::after {
+            content: '';
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 15px solid var(--card-bg);
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 15px 20px;
+            box-sizing: border-box;
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 25px;
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(255, 148, 194, 0.3);
+        }
+
+        /* 格子佈局 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* 卡片基礎樣式 */
+        .card {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            min-height: 180px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-color);
+        }
+
+        /* 圖片容器：確保高度固定且不變形 */
+        .card-img-wrapper {
+            width: 100%;
+            height: 150px;
+            background-color: #151515;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .card img {
+            /* width: 100%; */
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 沒圖片時顯示的貓爪替代圖示 */
+        .no-image-placeholder {
+            font-size: 3rem;
+            color: #333;
+            user-select: none;
+        }
+
+        /* 卡片名字區域 */
+        .card-info {
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        /* 複製成功彈出小動畫提示 */
+        .toast {
+            position: fixed;
+            bottom: -50px;
+            background-color: var(--accent-color);
+            color: #121212;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transition: bottom 0.3s ease-in-out, opacity 0.3s;
+            opacity: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            bottom: 40px;
+            opacity: 1;
+            animation: bounce 0.4s ease-in-out alternate 2;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🐾 企鵝收集箱 🐾</h1>
+    <div style="color: #666; font-size: 0.9rem;">點擊任意方格即可複製名字</div>
+
+    <div class="search-container">
+        <input type="text" id="searchBar" class="search-bar" placeholder="輸入關鍵字搜尋...🐾">
+    </div>
+
+    <div class="grid-container" id="gridContainer"></div>
+
+    <div class="toast" id="toast">🐾 名字已複製到剪貼簿！</div>
+
+    <script src="./penguin.js"></script>
+    <script>
+        const gridContainer = document.getElementById('gridContainer');
+        const searchBar = document.getElementById('searchBar');
+        const toast = document.getElementById('toast');
+
+        // 渲染卡片的函式
+        function renderGrid(filterText = '') {
+            gridContainer.innerHTML = ''; // 清空舊內容
+            
+            // 轉小寫進行模糊搜尋
+            const filteredData = penguinData.filter(item => 
+                item.name.toLowerCase().includes(filterText.toLowerCase())
+            );
+
+            filteredData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                // 點擊事件：複製文字 + 觸發動畫
+                card.onclick = () => copyToClipboard(item.name);
+
+                // 判斷是否有圖片路徑
+                if (item.url && item.url.trim() !== '') {
+                    card.innerHTML = `
+                        <div class="card-img-wrapper">
+                            <img src="${item.url}" alt="${item.name}" onerror="imgError(this)">
+                        </div>
+                        <div class="card-info">${item.name}</div>
+                    `;
+                } else {
+                    // 沒圖片時，不產生圖片容器，只留名字（置中放大顯示）
+                    card.innerHTML = `
+                        <div class="card-info" style="font-size: 1.1rem; color: var(--accent-color);">
+                            🐾<br>${item.name}
+                        </div>
+                    `;
+                }
+
+                gridContainer.appendChild(card);
+            });
+        }
+
+        // 當圖片載入失敗（例如路徑碎掉）的替代處理
+        function imgError(image) {
+            const wrapper = image.parentElement;
+            wrapper.innerHTML = '<div class="no-image-placeholder">😿</div>';
+        }
+
+        // 複製到剪貼簿與動畫特效
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // 顯示 Toast 提示
+                toast.innerText = `🐾 複製成功: 「${text}」`;
+                toast.classList.add('show');
+                
+                // 2秒後自動消失
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            }).catch(err => {
+                console.error('複製失敗: ', err);
+            });
+        }
+
+        // 監聽輸入框變動事件 (input 事件只要內容一變動就會即時觸發)
+        searchBar.addEventListener('input', (e) => {
+            renderGrid(e.target.value);
+        });
+
+        // 網頁開啟時，進行首次初始渲染
+        renderGrid();
+    </script>
+</body>
+</html>
